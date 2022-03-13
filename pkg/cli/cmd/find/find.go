@@ -155,10 +155,7 @@ func doQuery(ctx context.DnoteCtx, query, bookName string) (*sql.Rows, error) {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		phrase, err := escapePhrase(args[0])
-		if err != nil {
-			return errors.Wrap(err, "escaping phrase")
-		}
+		phrase := args[0]
 
 		rows, err := doQuery(ctx, phrase, bookName)
 		if err != nil {
