@@ -37,17 +37,7 @@ var upgradeInterval int64 = 86400 * 7 * 3
 
 // shouldCheckUpdate checks if update should be checked
 func shouldCheckUpdate(ctx context.DnoteCtx) (bool, error) {
-	db := ctx.DB
-
-	var lastUpgrade int64
-	err := db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastUpgrade).Scan(&lastUpgrade)
-	if err != nil {
-		return false, errors.Wrap(err, "getting last_udpate")
-	}
-
-	now := time.Now().Unix()
-
-	return now-lastUpgrade > upgradeInterval, nil
+	return false, nil
 }
 
 func touchLastUpgrade(ctx context.DnoteCtx) error {
