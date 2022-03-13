@@ -83,7 +83,15 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			if utils.IsNumber(args[0]) {
 				run = cat.NewRun(ctx, contentOnly)
 			} else {
-				run = ls.NewRun(ctx, false)
+				n, err := ls.RetSingle(ctx, args[0])
+				if err != nil {
+					return errors.Wrap(err, "querying books/notes")
+				} else if n == "" {
+					run = ls.NewRun(ctx, false)
+				} else {
+					args[0] = n
+					run = cat.NewRun(ctx, contentOnly)
+				}
 			}
 		} else if len(args) == 2 {
 			// DEPRECATED: passing book name to view command is deprecated

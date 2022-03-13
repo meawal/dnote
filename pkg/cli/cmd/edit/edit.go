@@ -25,6 +25,8 @@ import (
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	
+	"github.com/dnote/dnote/pkg/cli/cmd/ls"
 )
 
 var contentFlag string
@@ -97,8 +99,18 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 				return errors.Wrap(err, "editing note")
 			}
 		} else {
-			if err := runBook(ctx, target); err != nil {
-				return errors.Wrap(err, "editing book")
+			n, err := ls.RetSingle(ctx, args[0])
+			if err != nil {
+				return errors.Wrap(err, "querying books/notes")
+			} else if n == "" {
+				if err := runBook(ctx, target); err != nil {
+					return errors.Wrap(err, "editing book")
+				}
+			} else {
+				target = n
+				if err := runNote(ctx, target); err != nil {
+					return errors.Wrap(err, "editing note")
+				}
 			}
 		}
 

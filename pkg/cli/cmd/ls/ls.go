@@ -22,6 +22,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/infra"
@@ -96,6 +97,10 @@ type bookInfo struct {
 type noteInfo struct {
 	RowID int
 	Body  string
+}
+
+type noteID struct {
+	RowID int
 }
 
 // getNewlineIdx returns the index of newline character in a string
@@ -208,4 +213,36 @@ func printNotes(ctx context.DnoteCtx, bookName string) error {
 	}
 
 	return nil
+}
+
+func RetSingle(ctx context.DnoteCtx, bookName string) (string,error) {
+	db := ctx.DB
+
+	var bookUUID string
+	err := db.QueryRow("SELECT uuid FROM books WHERE label = ?", bookName).Scan(&bookUUID)
+	if err == sql.ErrNoRows {
+		return "", errors.New("book not found")
+	} else if err != nil {
+		return "", errors.Wrap(err, "querying the book")
+	}
+
+	rows, err := db.Query(`SELECT rowid FROM notes WHERE book_uuid = ? AND deleted = ? ORDER BY added_on ASC;`, bookUUID, false)
+	if err != nil {
+		return "", errors.Wrap(err, "querying notes")
+	}
+	defer rows.Close()
+
+	var count int = 0
+	var info noteID
+	for rows.Next() {
+		err = rows.Scan(&info.RowID)
+		if err != nil {
+			return "", errors.Wrap(err, "scanning a row")
+		}
+		count += 1
+		if count > 1 {
+			return "", nil
+		}
+	}
+	return strconv.Itoa(info.RowID), nil
 }
