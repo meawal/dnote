@@ -102,7 +102,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			n, err := ls.RetSingle(ctx, args[0])
 			if err != nil {
 				return errors.Wrap(err, "querying books/notes")
-			} else if n == "" {
+			} else if (n == "") || (nameFlag != "") {
 				if err := runBook(ctx, target); err != nil {
 					return errors.Wrap(err, "editing book")
 				}
