@@ -32,6 +32,10 @@ import (
 	"github.com/dnote/dnote/pkg/cli/upgrade"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	
+	"os"
+	"path/filepath"
+	"os/exec"
 )
 
 const (
@@ -40,7 +44,8 @@ const (
 )
 
 var example = `
-  dnote sync`
+  dnote sync
+  * sync is performed by executing the user defined script ~/.local/share/dnote/sync.py`
 
 var isFullSync bool
 
@@ -51,13 +56,29 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 		Aliases: []string{"s"},
 		Short:   "Sync data with the server",
 		Example: example,
-		RunE:    newRun(ctx),
+		RunE:    runPy(ctx),
 	}
 
-	f := cmd.Flags()
-	f.BoolVarP(&isFullSync, "full", "f", false, "perform a full sync instead of incrementally syncing only the changed data.")
-
 	return cmd
+}
+
+func runPy(ctx context.DnoteCtx) infra.RunEFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		syncPy := filepath.Join(ctx.Paths.Data, "dnote/sync.py")
+		log.Info("executing "+ syncPy + "\n")
+		if _, err := os.Stat(syncPy); err == nil {
+  			sync := exec.Command("python3", syncPy)
+  			sync.Stdout = os.Stdout
+    			sync.Stderr = os.Stderr
+			if err := sync.Run(); err != nil { 
+				return errors.New(err.Error())
+			}
+			log.Success("sync completed successfully\n")
+  			return nil
+		} else {
+			return errors.New(err.Error())
+		}
+	}
 }
 
 func getLastSyncAt(tx *database.DB) (int, error) {

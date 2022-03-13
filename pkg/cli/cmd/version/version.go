@@ -32,7 +32,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 		Short: "Print the version number of Dnote",
 		Long:  "Print the version number of Dnote",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("dnote %s\n", ctx.Version)
+			fmt.Printf("dnote %s-awal\n", ctx.Version)
 		},
 	}
 
