@@ -49,7 +49,11 @@ func main() {
 		panic(errors.Wrap(err, "initializing context"))
 	}
 	defer ctx.DB.Close()
-
+	
+	if len(os.Args) == 1 {
+		os.Args = append(os.Args, "view")
+	}
+	
 	root.Register(remove.NewCmd(*ctx))
 	root.Register(edit.NewCmd(*ctx))
 	root.Register(add.NewCmd(*ctx))
@@ -59,7 +63,7 @@ func main() {
 	root.Register(cat.NewCmd(*ctx))
 	root.Register(view.NewCmd(*ctx))
 	root.Register(find.NewCmd(*ctx))
-
+	
 	if err := root.Execute(); err != nil {
 		log.Errorf("%s\n", err.Error())
 		os.Exit(1)
