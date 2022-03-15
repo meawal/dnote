@@ -53,7 +53,6 @@ var isFullSync bool
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "sync",
-		Aliases: []string{"s"},
 		Short:   "Sync data with the server",
 		Example: example,
 		RunE:    runPy(ctx),
