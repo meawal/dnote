@@ -1,5 +1,4 @@
 /vendor
-/build
 .vagrant
 *.log
 node_modules
