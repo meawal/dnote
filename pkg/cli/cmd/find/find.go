@@ -136,7 +136,7 @@ func doQuery(ctx context.DnoteCtx, query, bookName string) (*sql.Rows, error) {
 	sql := `SELECT
 		notes.rowid,
 		books.label AS book_label,
-		snippet(note_fts, 0, '<dnotehl>', '</dnotehl>', '...', 28)
+		snippet(note_fts, 0, '<dnotehl>', '</dnotehl>', '<dnotehl>...</dnotehl>', 28)
 	FROM note_fts
 	INNER JOIN notes ON notes.rowid = note_fts.rowid
 	INNER JOIN books ON notes.book_uuid = books.uuid
