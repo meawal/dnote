@@ -35,6 +35,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/cmd/remove"
 	"github.com/dnote/dnote/pkg/cli/cmd/root"
 	"github.com/dnote/dnote/pkg/cli/cmd/sync"
+	"github.com/dnote/dnote/pkg/cli/cmd/search"
 	"github.com/dnote/dnote/pkg/cli/cmd/version"
 	"github.com/dnote/dnote/pkg/cli/cmd/view"
 )
@@ -59,6 +60,7 @@ func main() {
 	root.Register(add.NewCmd(*ctx))
 	root.Register(ls.NewCmd(*ctx))
 	root.Register(sync.NewCmd(*ctx))
+	root.Register(search.NewCmd(*ctx))
 	root.Register(version.NewCmd(*ctx))
 	root.Register(cat.NewCmd(*ctx))
 	root.Register(view.NewCmd(*ctx))
