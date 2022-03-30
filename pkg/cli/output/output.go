@@ -23,6 +23,7 @@ package output
 import (
 	"fmt"
 	"time"
+	"strings"
 
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/log"
@@ -30,21 +31,21 @@ import (
 
 // NoteInfo prints a note information
 func NoteInfo(info database.NoteInfo) {
-	log.Infof("book name: %s\n", info.BookLabel)
+	log.Infof("note name: %s\tid: %d\n", info.BookLabel, info.RowID)
 	log.Infof("created at: %s\n", time.Unix(0, info.AddedOn).Format("Jan 2, 2006 3:04pm (MST)"))
 	if info.EditedOn != 0 {
 		log.Infof("updated at: %s\n", time.Unix(0, info.EditedOn).Format("Jan 2, 2006 3:04pm (MST)"))
 	}
-	log.Infof("note id: %d\n", info.RowID)
-	log.Infof("note uuid: %s\n", info.UUID)
+	//log.Infof("note id: %d\n", info.RowID)
+	//log.Infof("note uuid: %s\n", info.UUID)
 
 	fmt.Printf("\n------------------------content------------------------\n")
-	fmt.Printf("%s", info.Content)
+	fmt.Printf("%s", strings.TrimRight(info.Content, " \n"))
 	fmt.Printf("\n-------------------------------------------------------\n")
 }
 
 func NoteContent(info database.NoteInfo) {
-	fmt.Printf("%s", info.Content)
+	fmt.Printf("%s", info.Content, " \n")
 }
 
 // BookInfo prints a note information
