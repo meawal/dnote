@@ -79,6 +79,14 @@ func NewRun(ctx context.DnoteCtx, nameOnly bool) infra.RunEFunc {
 		}
 
 		bookName := args[0]
+		if strings.Contains(bookName, "%") {
+			if err := printMatchBooks(ctx, bookName, nameOnly); err != nil {
+				return errors.Wrap(err, "viewing books")
+			}
+
+			return nil
+		}
+
 		if err := printNotes(ctx, bookName); err != nil {
 			return errors.Wrapf(err, "viewing book '%s'", bookName)
 		}
@@ -170,6 +178,40 @@ func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
 
 	return nil
 }
+
+func printMatchBooks(ctx context.DnoteCtx, keyw string, nameOnly bool) error {
+	db := ctx.DB
+
+	rows, err := db.Query(`SELECT books.label, count(notes.uuid) note_count
+	FROM books
+	LEFT JOIN notes ON notes.book_uuid = books.uuid AND notes.deleted = false
+	WHERE books.deleted = false
+		and books.label LIKE ?
+	GROUP BY books.uuid
+	ORDER BY books.label ASC;`, keyw)
+	if err != nil {
+		return errors.Wrap(err, "querying books")
+	}
+	defer rows.Close()
+
+	infos := []bookInfo{}
+	for rows.Next() {
+		var info bookInfo
+		err = rows.Scan(&info.BookLabel, &info.NoteCount)
+		if err != nil {
+			return errors.Wrap(err, "scanning a row")
+		}
+
+		infos = append(infos, info)
+	}
+
+	for _, info := range infos {
+		printBookLine(info, nameOnly)
+	}
+
+	return nil
+}
+
 
 func printNotes(ctx context.DnoteCtx, bookName string) error {
 	db := ctx.DB

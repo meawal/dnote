@@ -27,17 +27,22 @@ import (
 	"github.com/dnote/dnote/pkg/cli/cmd/cat"
 	"github.com/dnote/dnote/pkg/cli/cmd/ls"
 	"github.com/dnote/dnote/pkg/cli/utils"
+	"strings"
 )
 
 var example = `
  * View all books
  dnote view
+ dnote
+
+ * View books start with a keyword
+ dnote view java%
 
  * List notes in a book
  dnote view javascript
 
- * View a particular note in a book
- dnote view javascript 0
+ * View a particular note by its id
+ dnote view 1
  `
 
 var nameOnly bool
@@ -80,7 +85,9 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 				return errors.New("--name-only flag is only valid when viewing books")
 			}
 
-			if utils.IsNumber(args[0]) {
+			if strings.Contains(args[0], "%"){
+				run = ls.NewRun(ctx, false)
+			} else if utils.IsNumber(args[0]) {
 				run = cat.NewRun(ctx, contentOnly)
 			} else {
 				n, err := ls.RetSingle(ctx, args[0])
