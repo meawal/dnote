@@ -110,15 +110,6 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 
 		log.Successf("added to %s\n", bookName)
 
-		/*
-		db := ctx.DB
-		info, err := database.GetNoteInfo(db, noteRowID)
-		if err != nil {
-			return err
-		}
-
-		output.NoteInfo(info)
-		*/
 		if err := upgrade.Check(ctx); err != nil {
 			log.Error(errors.Wrap(err, "automatically checking updates").Error())
 		}

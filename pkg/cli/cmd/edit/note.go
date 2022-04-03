@@ -29,6 +29,8 @@ import (
 	//"github.com/dnote/dnote/pkg/cli/output"
 	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/pkg/errors"
+	
+	"github.com/dnote/dnote/pkg/cli/utils"
 )
 
 func validateRunNoteFlags() error {
@@ -133,6 +135,11 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 		return errors.Wrap(err, "querying the book")
 	}
 
+	tx, err := ctx.DB.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
 	content := contentFlag
 
 	// If no flag was provided, launch an editor to get the content
@@ -143,11 +150,22 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 		}
 
 		content = c
-	}
-
-	tx, err := ctx.DB.Begin()
-	if err != nil {
-		return errors.Wrap(err, "beginning a transaction")
+	} else if bookFlag != "" && contentFlag == "" {
+		var bookUUID string
+		err = tx.QueryRow("SELECT uuid FROM books WHERE label = ?", bookFlag).Scan(&bookUUID)
+		if err == sql.ErrNoRows {
+			bookUUID, err = utils.GenerateUUID()
+			if err != nil {
+				return errors.Wrap(err, "generating uuid")
+			}
+	
+			b := database.NewBook(bookUUID, bookFlag, 0, false, true)
+			err = b.Insert(tx)
+			if err != nil {
+				tx.Rollback()
+				return errors.Wrap(err, "creating the book")
+			}
+		}
 	}
 
 	err = updateNote(ctx, tx, note, bookFlag, content)
@@ -155,13 +173,7 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 		tx.Rollback()
 		return errors.Wrap(err, "updating note fields")
 	}
-/*
-	noteInfo, err := database.GetNoteInfo(tx, rowID)
-	if err != nil {
-		tx.Rollback()
-		return errors.Wrap(err, "getting note info")
-	}
-*/
+
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
@@ -169,7 +181,6 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 	}
 
 	log.Success("edited the note\n")
-	//output.NoteInfo(noteInfo)
 
 	return nil
 }
