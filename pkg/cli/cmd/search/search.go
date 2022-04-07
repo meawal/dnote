@@ -181,7 +181,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			var body string
 			err = rows.Scan(&info.RowID, &info.BookLabel, &body)
 			
-			c := 50
+			c := 60
 			var phrase_lwr = strings.ToLower(args[0])
 			var s = 0
 			var e = 0
