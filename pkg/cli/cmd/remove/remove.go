@@ -49,7 +49,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "remove <note id|book name>",
 		Short:   "Remove a note or a book",
-		Aliases: []string{"rm", "d", "delete"},
+		Aliases: []string{"r", "d", "delete"},
 		Example: example,
 		PreRunE: preRun,
 		RunE:    newRun(ctx),
