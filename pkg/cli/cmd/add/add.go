@@ -39,10 +39,10 @@ var contentFlag string
 
 var example = `
  * Open an editor to write content
- dnote add git
+ dnote new git
 
  * Skip the editor by providing content directly
- dnote add git -c "time is a part of the commit hash"`
+ dnote new git -c "time is a part of the commit hash"`
 
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
@@ -55,9 +55,9 @@ func preRun(cmd *cobra.Command, args []string) error {
 // NewCmd returns a new add command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add <book>",
+		Use:     "new <book>",
 		Short:   "Add a new note",
-		Aliases: []string{"a", "n", "new"},
+		Aliases: []string{"n"},
 		Example: example,
 		PreRunE: preRun,
 		RunE:    newRun(ctx),
