@@ -147,8 +147,6 @@ func doQuery(ctx context.DnoteCtx, query, bookName string) (*sql.Rows, error) {
 	if bookName != "" {
 		sql = fmt.Sprintf("%s AND books.label LIKE ?", sql)
 		args = append(args, bookName)
-	} else {
-		sql = fmt.Sprintf("%s AND books.label != 'archiv'", sql)
 	}
 
 	rows, err := db.Query(sql, args...)
