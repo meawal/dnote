@@ -42,9 +42,10 @@ var example = `
 	`
 
 var bookName string
+var all bool
 
 func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
+	if len(args) == 0 {
 		return errors.New("Incorrect number of argument")
 	}
 
@@ -64,6 +65,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&bookName, "book", "b", "", "book name to find notes in")
+	f.BoolVarP(&all, "all", "a", false, "find keywords in all notes including the archived")
 
 	return cmd
 }
@@ -73,6 +75,7 @@ type noteInfo struct {
 	RowID     int
 	BookLabel string
 	Body      string
+	Archive   bool
 }
 
 // formatFTSSnippet turns the matched snippet from a full text search
@@ -130,13 +133,14 @@ func escapePhrase(s string) (string, error) {
 	return b.String(), nil
 }
 
-func doQuery(ctx context.DnoteCtx, query, bookName string) (*sql.Rows, error) {
+func doQuery(ctx context.DnoteCtx, query, bookName string, all bool) (*sql.Rows, error) {
 	db := ctx.DB
 
 	sql := `SELECT
 		notes.rowid,
 		books.label AS book_label,
-		snippet(note_fts, 0, '<dnotehl>', '</dnotehl>', '<dnotehl>...</dnotehl>', 28)
+		snippet(note_fts, 0, '<dnotehl>', '</dnotehl>', '<dnotehl>...</dnotehl>', 28),
+		books.archive as archive
 	FROM note_fts
 	INNER JOIN notes ON notes.rowid = note_fts.rowid
 	INNER JOIN books ON notes.book_uuid = books.uuid
@@ -144,8 +148,10 @@ func doQuery(ctx context.DnoteCtx, query, bookName string) (*sql.Rows, error) {
 	args := []interface{}{query}
 
 	if bookName != "" {
-		sql = fmt.Sprintf("%s AND books.label = ?", sql)
+		sql = fmt.Sprintf("%s AND books.label LIKE ?", sql)
 		args = append(args, bookName)
+	} else if !all {
+		sql = fmt.Sprintf("%s AND books.archive = false", sql)
 	}
 
 	rows, err := db.Query(sql, args...)
@@ -155,9 +161,9 @@ func doQuery(ctx context.DnoteCtx, query, bookName string) (*sql.Rows, error) {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		phrase := args[0]
+		phrase := strings.Join(args[:], " ")
 
-		rows, err := doQuery(ctx, phrase, bookName)
+		rows, err := doQuery(ctx, phrase, bookName, all)
 		if err != nil {
 			return errors.Wrap(err, "querying notes")
 		}
@@ -168,7 +174,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			var info noteInfo
 
 			var body string
-			err = rows.Scan(&info.RowID, &info.BookLabel, &body)
+			err = rows.Scan(&info.RowID, &info.BookLabel, &body, &info.Archive)
 			if err != nil {
 				return errors.Wrap(err, "scanning a row")
 			}
@@ -184,7 +190,12 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		}
 
 		for _, info := range infos {
-			bookLabel := log.ColorYellow.Sprintf("(%s)", info.BookLabel)
+			var bookLabel string
+			if info.Archive {
+				bookLabel = log.ColorGray.Sprintf("(%s)", info.BookLabel)
+			} else {
+				bookLabel = log.ColorYellow.Sprintf("(%s)", info.BookLabel)
+			}
 			rowid := log.ColorYellow.Sprintf("(%d)", info.RowID)
 
 			log.Plainf("%s %s %s\n", bookLabel, rowid, info.Body)
