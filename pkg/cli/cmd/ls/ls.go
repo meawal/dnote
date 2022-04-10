@@ -68,10 +68,10 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 }
 
 // NewRun returns a new run function for ls
-func NewRun(ctx context.DnoteCtx, nameOnly bool) infra.RunEFunc {
+func NewRun(ctx context.DnoteCtx, all bool) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			if err := printBooks(ctx, nameOnly); err != nil {
+			if err := printBooks(ctx, all); err != nil {
 				return errors.Wrap(err, "viewing books")
 			}
 
@@ -80,7 +80,7 @@ func NewRun(ctx context.DnoteCtx, nameOnly bool) infra.RunEFunc {
 
 		bookName := args[0]
 		if strings.Contains(bookName, "%") {
-			if err := printMatchBooks(ctx, bookName, nameOnly); err != nil {
+			if err := printMatchBooks(ctx, bookName, false); err != nil {
 				return errors.Wrap(err, "viewing books")
 			}
 
@@ -99,6 +99,7 @@ func NewRun(ctx context.DnoteCtx, nameOnly bool) infra.RunEFunc {
 type bookInfo struct {
 	BookLabel string
 	NoteCount int
+	Archive bool
 }
 
 // noteInfo is an information about the note to be printed on screen
@@ -142,18 +143,21 @@ func formatBody(noteBody string) (string, bool) {
 func printBookLine(info bookInfo, nameOnly bool) {
 	if nameOnly {
 		fmt.Println(info.BookLabel)
-	} else {
+	} else if info.Archive == false{
 		log.Printf("%s %s\n", info.BookLabel, log.ColorYellow.Sprintf("(%d)", info.NoteCount))
+	} else {
+		log.Printf("%s %s\n", log.ColorGray.Sprintf("%s",info.BookLabel), log.ColorYellow.Sprintf("(%d)", info.NoteCount))
 	}
 }
 
-func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
+func printBooks(ctx context.DnoteCtx, all bool) error {
 	db := ctx.DB
 
-	rows, err := db.Query(`SELECT books.label, count(notes.uuid) note_count
+	rows, err := db.Query(`SELECT books.label, books.archive, count(notes.uuid) note_count
 	FROM books
 	LEFT JOIN notes ON notes.book_uuid = books.uuid AND notes.deleted = false
 	WHERE books.deleted = false
+		AND books.archive = false
 	GROUP BY books.uuid
 	ORDER BY books.label ASC;`)
 	if err != nil {
@@ -164,7 +168,7 @@ func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
 	infos := []bookInfo{}
 	for rows.Next() {
 		var info bookInfo
-		err = rows.Scan(&info.BookLabel, &info.NoteCount)
+		err = rows.Scan(&info.BookLabel, &info.Archive, &info.NoteCount)
 		if err != nil {
 			return errors.Wrap(err, "scanning a row")
 		}
@@ -173,16 +177,44 @@ func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
 	}
 
 	for _, info := range infos {
-		printBookLine(info, nameOnly)
+		printBookLine(info, false)
 	}
+	
+	if all {
+		rows, err := db.Query(`SELECT books.label, books.archive, count(notes.uuid) note_count
+		FROM books
+		LEFT JOIN notes ON notes.book_uuid = books.uuid AND notes.deleted = false
+		WHERE books.deleted = false
+			AND books.archive = true
+		GROUP BY books.uuid
+		ORDER BY books.label ASC;`)
+		if err != nil {
+			return errors.Wrap(err, "querying books")
+		}
+		defer rows.Close()	
 
+		infos := []bookInfo{}
+		for rows.Next() {
+			var info bookInfo
+			err = rows.Scan(&info.BookLabel, &info.Archive, &info.NoteCount)
+			if err != nil {
+				return errors.Wrap(err, "scanning a row")
+			}
+
+			infos = append(infos, info)
+		}	
+
+		for _, info := range infos {
+			printBookLine(info, false)
+		}
+	}
 	return nil
 }
 
 func printMatchBooks(ctx context.DnoteCtx, keyw string, nameOnly bool) error {
 	db := ctx.DB
 
-	rows, err := db.Query(`SELECT books.label, count(notes.uuid) note_count
+	rows, err := db.Query(`SELECT books.label, books.archive, count(notes.uuid) note_count
 	FROM books
 	LEFT JOIN notes ON notes.book_uuid = books.uuid AND notes.deleted = false
 	WHERE books.deleted = false
@@ -197,7 +229,7 @@ func printMatchBooks(ctx context.DnoteCtx, keyw string, nameOnly bool) error {
 	infos := []bookInfo{}
 	for rows.Next() {
 		var info bookInfo
-		err = rows.Scan(&info.BookLabel, &info.NoteCount)
+		err = rows.Scan(&info.BookLabel, &info.Archive, &info.NoteCount)
 		if err != nil {
 			return errors.Wrap(err, "scanning a row")
 		}

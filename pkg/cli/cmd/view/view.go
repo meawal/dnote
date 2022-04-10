@@ -45,7 +45,7 @@ var example = `
  dnote view 1
  `
 
-var nameOnly bool
+var all bool
 var contentOnly bool
 
 func preRun(cmd *cobra.Command, args []string) error {
@@ -68,7 +68,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.BoolVarP(&nameOnly, "name-only", "", false, "print book names only")
+	f.BoolVarP(&all, "all", "a", false, "view all books including the archived")
 	f.BoolVarP(&contentOnly, "content-only", "", false, "print the note content only")
 
 	return cmd
@@ -79,10 +79,10 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		var run infra.RunEFunc
 
 		if len(args) == 0 {
-			run = ls.NewRun(ctx, nameOnly)
+			run = ls.NewRun(ctx, all)
 		} else if len(args) == 1 {
-			if nameOnly {
-				return errors.New("--name-only flag is only valid when viewing books")
+			if all {
+				return errors.New("--all flag is only valid when viewing books")
 			}
 
 			if strings.Contains(args[0], "%"){
