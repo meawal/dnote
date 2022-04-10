@@ -35,9 +35,11 @@ import (
 	"github.com/dnote/dnote/pkg/cli/cmd/remove"
 	"github.com/dnote/dnote/pkg/cli/cmd/root"
 	"github.com/dnote/dnote/pkg/cli/cmd/sync"
-	"github.com/dnote/dnote/pkg/cli/cmd/search"
 	"github.com/dnote/dnote/pkg/cli/cmd/version"
 	"github.com/dnote/dnote/pkg/cli/cmd/view"
+	
+	"github.com/dnote/dnote/pkg/cli/cmd/search"
+	"github.com/dnote/dnote/pkg/cli/cmd/archive"
 )
 
 // apiEndpoint and versionTag are populated during link time
@@ -65,6 +67,7 @@ func main() {
 	root.Register(cat.NewCmd(*ctx))
 	root.Register(view.NewCmd(*ctx))
 	root.Register(find.NewCmd(*ctx))
+	root.Register(archive.NewCmd(*ctx))
 	
 	if err := root.Execute(); err != nil {
 		log.Errorf("%s\n", err.Error())
