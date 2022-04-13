@@ -192,6 +192,11 @@ var lm4 = migration{
 			return errors.Wrap(err, "adding deleted column to books")
 		}
 
+		_, err = tx.Exec("ALTER TABLE books ADD COLUMN archive bool DEFAULT false")
+		if err != nil {
+			return errors.Wrap(err, "adding archive column to books")
+		}
+
 		_, err = tx.Exec("ALTER TABLE notes ADD COLUMN dirty bool DEFAULT false")
 		if err != nil {
 			return errors.Wrap(err, "adding dirty column to notes")
