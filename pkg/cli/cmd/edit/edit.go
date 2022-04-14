@@ -44,9 +44,6 @@ var example = `
   dnote edit 3 -b javascript
 
   * Rename a book
-  dnote edit javascript
-
-  * Rename a book without launching an editor
   dnote edit javascript -n js
 `
 
@@ -81,7 +78,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		// DEPRECATED: Remove in 1.0.0
 		if len(args) == 2 {
-			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
+			//log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
 
 			target := args[1]
 
@@ -102,10 +99,14 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			n, err := ls.RetSingle(ctx, args[0])
 			if err != nil {
 				return errors.Wrap(err, "querying books/notes")
-			} else if (n == "") || (nameFlag != "") {
+			} else if (nameFlag != "") {
 				if err := runBook(ctx, target); err != nil {
 					return errors.Wrap(err, "editing book")
 				}
+			} else if (n == "") && (nameFlag == "") {
+				log.Plain(log.ColorYellow.Sprintf("This book has several notes, choose one:\n"))
+				ls.PrintNotes(ctx, target)
+				//return errors.Wrap(err, "editing book")
 			} else {
 				target = n
 				if err := runNote(ctx, target); err != nil {

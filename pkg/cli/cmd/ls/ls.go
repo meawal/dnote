@@ -87,7 +87,7 @@ func NewRun(ctx context.DnoteCtx, all bool) infra.RunEFunc {
 			return nil
 		}
 
-		if err := printNotes(ctx, bookName); err != nil {
+		if err := PrintNotes(ctx, bookName); err != nil {
 			return errors.Wrapf(err, "viewing book '%s'", bookName)
 		}
 
@@ -179,7 +179,7 @@ func printBooks(ctx context.DnoteCtx, all bool) error {
 	for _, info := range infos {
 		printBookLine(info, false)
 	}
-	
+
 	if all {
 		rows, err := db.Query(`SELECT books.label, books.archive, count(notes.uuid) note_count
 		FROM books
@@ -191,7 +191,7 @@ func printBooks(ctx context.DnoteCtx, all bool) error {
 		if err != nil {
 			return errors.Wrap(err, "querying books")
 		}
-		defer rows.Close()	
+		defer rows.Close()
 
 		infos := []bookInfo{}
 		for rows.Next() {
@@ -202,7 +202,7 @@ func printBooks(ctx context.DnoteCtx, all bool) error {
 			}
 
 			infos = append(infos, info)
-		}	
+		}
 
 		for _, info := range infos {
 			printBookLine(info, false)
@@ -245,7 +245,7 @@ func printMatchBooks(ctx context.DnoteCtx, keyw string, nameOnly bool) error {
 }
 
 
-func printNotes(ctx context.DnoteCtx, bookName string) error {
+func PrintNotes(ctx context.DnoteCtx, bookName string) error {
 	db := ctx.DB
 
 	var bookUUID string
