@@ -110,10 +110,6 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 
 		log.Successf("added to %s\n", bookName)
 
-		if err := upgrade.Check(ctx); err != nil {
-			log.Error(errors.Wrap(err, "automatically checking updates").Error())
-		}
-
 		return nil
 	}
 }
