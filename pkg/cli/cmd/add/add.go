@@ -26,9 +26,9 @@ import (
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
-	//"github.com/dnote/dnote/pkg/cli/output"
+	"github.com/dnote/dnote/pkg/cli/output"
 	"github.com/dnote/dnote/pkg/cli/ui"
-	"github.com/dnote/dnote/pkg/cli/upgrade"
+	//"github.com/dnote/dnote/pkg/cli/upgrade"
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/dnote/dnote/pkg/cli/validate"
 	"github.com/pkg/errors"
@@ -57,7 +57,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "new <book>",
 		Short:   "Add a new note",
-		Aliases: []string{"n"},
+		Aliases: []string{"n", "add"},
 		Example: example,
 		PreRunE: preRun,
 		RunE:    newRun(ctx),
@@ -103,12 +103,20 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		}
 
 		ts := time.Now().UnixNano()
-		_, err = writeNote(ctx, bookName, content, ts)
+		noteRowID, err := writeNote(ctx, bookName, content, ts)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
 		}
 
 		log.Successf("added to %s\n", bookName)
+		
+		db := ctx.DB
+		info, err := database.GetNoteInfo(db, noteRowID)
+		if err != nil {
+			return err
+		}
+
+		output.NoteHead(info)
 
 		return nil
 	}

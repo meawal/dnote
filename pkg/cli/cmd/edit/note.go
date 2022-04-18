@@ -26,7 +26,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/log"
-	//"github.com/dnote/dnote/pkg/cli/output"
+	"github.com/dnote/dnote/pkg/cli/output"
 	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/pkg/errors"
 	
@@ -173,6 +173,12 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 		tx.Rollback()
 		return errors.Wrap(err, "updating note fields")
 	}
+	
+	noteInfo, err := database.GetNoteInfo(tx, rowID)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "getting note info")
+	}
 
 	err = tx.Commit()
 	if err != nil {
@@ -181,6 +187,7 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 	}
 
 	log.Success("edited the note\n")
+	output.NoteHead(noteInfo)
 
 	return nil
 }

@@ -44,6 +44,16 @@ func NoteInfo(info database.NoteInfo) {
 	fmt.Printf("\n-------------------------------------------------------\n")
 }
 
+func NoteHead(info database.NoteInfo) {
+	log.Infof("note name: %s\tid: %d\n", info.BookLabel, info.RowID)
+	log.Infof("created at: %s\n", time.Unix(0, info.AddedOn).Format("Jan 2, 2006 3:04pm (MST)"))
+	if info.EditedOn != 0 {
+		log.Infof("updated at: %s\n", time.Unix(0, info.EditedOn).Format("Jan 2, 2006 3:04pm (MST)"))
+	}
+	//log.Infof("note id: %d\n", info.RowID)
+	//log.Infof("note uuid: %s\n", info.UUID)
+}
+
 func NoteContent(info database.NoteInfo) {
 	fmt.Printf("%s", info.Content, " \n")
 }
