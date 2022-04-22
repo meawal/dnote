@@ -40,6 +40,7 @@ import (
 	
 	"github.com/dnote/dnote/pkg/cli/cmd/search"
 	"github.com/dnote/dnote/pkg/cli/cmd/archive"
+	//"strconv"
 )
 
 // apiEndpoint and versionTag are populated during link time
@@ -68,6 +69,22 @@ func main() {
 	root.Register(view.NewCmd(*ctx))
 	root.Register(find.NewCmd(*ctx))
 	root.Register(archive.NewCmd(*ctx))
+	
+	cmd, _, err := root.Root.Find(os.Args[1:])
+
+  	// default cmd if only bookname is given
+	if err != nil || cmd == nil {
+		c, err := ls.CountBooks(*ctx, os.Args[1])
+		if err == nil {
+			if c==1 {
+				args := append([]string{"edit"}, os.Args[1:]...)
+				root.Root.SetArgs(args)
+			} else if c > 1 {
+				args := append([]string{"view"}, os.Args[1:]...)
+				root.Root.SetArgs(args)
+			}
+		}
+	}
 	
 	if err := root.Execute(); err != nil {
 		log.Errorf("%s\n", err.Error())

@@ -320,3 +320,33 @@ func RetSingle(ctx context.DnoteCtx, bookName string) (string,error) {
 	}
 	return strconv.Itoa(info.RowID), nil
 }
+
+func CountBooks(ctx context.DnoteCtx, bookName string) (int,error) {
+	db := ctx.DB
+
+	rows, err := db.Query(`SELECT count(notes.uuid) note_count
+	FROM books
+	LEFT JOIN notes ON notes.book_uuid = books.uuid AND notes.deleted = false
+	WHERE books.deleted = false
+		AND books.label = ?
+	GROUP BY books.uuid;`, bookName)
+	if err != nil {
+		return 0, errors.Wrap(err, "querying books")
+	}
+	defer rows.Close()
+
+	var count int 
+	var isMany int = 0
+	for rows.Next() {
+		err = rows.Scan(&count)
+		if err != nil {
+			return 0, errors.Wrap(err, "scanning a row")
+		}
+		isMany += 1
+		if isMany > 1 {
+			return 0, nil
+		}
+	}
+
+	return count, nil
+}

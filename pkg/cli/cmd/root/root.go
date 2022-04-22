@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var root = &cobra.Command{
+var Root = &cobra.Command{
 	Use:           "dnote",
 	Short:         "Dnote - a simple command line notebook",
 	SilenceErrors: true,
@@ -31,10 +31,10 @@ var root = &cobra.Command{
 
 // Register adds a new command
 func Register(cmd *cobra.Command) {
-	root.AddCommand(cmd)
+	Root.AddCommand(cmd)
 }
 
 // Execute runs the main command
 func Execute() error {
-	return root.Execute()
+	return Root.Execute()
 }
