@@ -40,7 +40,7 @@ import (
 	
 	"github.com/dnote/dnote/pkg/cli/cmd/search"
 	"github.com/dnote/dnote/pkg/cli/cmd/archive"
-	//"strconv"
+	"strconv"
 )
 
 // apiEndpoint and versionTag are populated during link time
@@ -74,8 +74,10 @@ func main() {
 
   	// default cmd if only bookname is given
 	if err != nil || cmd == nil {
-		c, err := ls.CountBooks(*ctx, os.Args[1])
-		if err == nil {
+		if _, err := strconv.Atoi(os.Args[1]); err == nil {
+			args := append([]string{"edit"}, os.Args[1:]...)
+			root.Root.SetArgs(args)
+		} else if c, err := ls.CountBooks(*ctx, os.Args[1]); err == nil {
 			if c==1 {
 				args := append([]string{"edit"}, os.Args[1:]...)
 				root.Root.SetArgs(args)
